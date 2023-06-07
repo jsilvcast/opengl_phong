@@ -15,7 +15,7 @@ set(LIBS
         GL
         )
 
-set(HEADER_FILES ${HEADER_FILES} textfile/textfile.h textfile/textfile_ALT.h)
+set(HEADER_FILES ${HEADER_FILES} textfile/textfile.h textfile/textfile_ALT.h shapes/cube.h shapes/tetrahedron.h)
 set(SOURCE_FILES ${SOURCE_FILES} textfile/textfile.c)
 
 add_library(${library_name} ${SOURCE_FILES} ${HEADER_FILES})
