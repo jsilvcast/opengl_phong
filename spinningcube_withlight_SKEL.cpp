@@ -25,6 +25,8 @@ void render(double);
 
 GLuint shader_program = 0; // shader program to set render pipeline
 GLuint vao = 0; // Vertext Array Object to set input data
+GLuint tetraVAO;
+
 GLint model_location, view_location, proj_location; // Uniforms for transformation matrices
 GLint normal_matrix_location; // Uniform for normal matrix
 
@@ -38,7 +40,8 @@ glm::vec3 camera_front(0.0f, 0.0f, -1.0f);
 glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
 
 // Lighting
-glm::vec3 light_pos(-1.0f, 0.0f, 0.0f);
+glm::vec3 light_pos(0.0f, 0.0f, 0.0f);
+glm::vec3 light_pos_2(0.0f, 0.0f, 0.0f);
 glm::vec3 light_ambient(0.2f, 0.2f, 0.2f);
 glm::vec3 light_diffuse(0.5f, 0.5f, 0.5f);
 glm::vec3 light_specular(1.0f, 1.0f, 1.0f);
@@ -187,11 +190,50 @@ int main() {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(1);
 
-    // Unbind vbo (it was conveniently registered by VertexAttribPointer)
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//    // Unbind vbo (it was conveniently registered by VertexAttribPointer)
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//
+//
+//
+//    // Unbind vao
+//    glBindVertexArray(0);
 
-    // Unbind vao
-    glBindVertexArray(0);
+    glGenVertexArrays(1, &tetraVAO);
+    glBindVertexArray(tetraVAO);
+
+    Tetrahedron tetrahedronInstance;
+    GLfloat* tetrahedron_vertex_positions_pointer = tetrahedronInstance.getVertices();
+    GLfloat tetrahedron_vertex_positions[36];
+    std::copy(tetrahedron_vertex_positions_pointer, tetrahedron_vertex_positions_pointer + 36, tetrahedron_vertex_positions);
+
+    // Vertex Buffer Object (for vertex coordinates)
+    GLuint vbo_tetrahedron = 0;
+    glGenBuffers(1, &vbo_tetrahedron);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_tetrahedron);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(tetrahedron_vertex_positions), tetrahedron_vertex_positions, GL_STATIC_DRAW);
+
+    // Vertex attributes
+    // 0: vertex position (x, y, z)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(0);
+
+    // 1: vertex normals (x, y, z)
+    GLfloat* tetrahedron_vertex_normals_pointer = tetrahedronInstance.getNormals();
+    GLfloat tetrahedron_vertex_normals[36];
+    std::copy(tetrahedron_vertex_normals_pointer, tetrahedron_vertex_normals_pointer + 36, tetrahedron_vertex_normals);
+
+    // Vertex Buffer Object (for vertex normals)
+    GLuint vbo_normals_tetrahedron = 0;
+    glGenBuffers(1, &vbo_normals_tetrahedron);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_normals_tetrahedron);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(tetrahedron_vertex_normals), tetrahedron_vertex_normals, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(1);
+
+//    // Unbind vbo (it was conveniently registered by VertexAttribPointer)
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glEnableVertexAttribArray(0);
 
     // Uniforms
     // - Model matrix
@@ -232,14 +274,14 @@ void render(double currentTime) {
     glViewport(0, 0, gl_width, gl_height);
 
     glUseProgram(shader_program);
-    glBindVertexArray(vao);
 
     glm::mat4 model_matrix, view_matrix, proj_matrix;
 
-    model_matrix = glm::mat4(1.f);
+    // Cube
+    model_matrix = glm::mat4(1.0f);
+    model_matrix = glm::translate(model_matrix, glm::vec3(-0.5f, 0.0f, 0.0f));
     model_matrix = glm::rotate(model_matrix, f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     model_matrix = glm::rotate(model_matrix, f * glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
 
     view_matrix = glm::lookAt(camera_pos, camera_pos + camera_front, camera_up);
     proj_matrix = glm::perspective(glm::radians(50.0f), (float)gl_width / (float)gl_height, 0.1f, 100.0f);
@@ -247,6 +289,22 @@ void render(double currentTime) {
     glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model_matrix));
     glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view_matrix));
     glUniformMatrix4fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj_matrix));
+
+    glBindVertexArray(vao);
+    glDrawArrays(GL_TRIANGLES, 0, 108);
+
+    // Tetrahedron
+    model_matrix = glm::mat4(1.0f);
+    model_matrix = glm::translate(model_matrix, glm::vec3(0.5f, 0.0f, 0.0f));
+    model_matrix = glm::rotate(model_matrix, f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    model_matrix = glm::rotate(model_matrix, f * glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model_matrix));
+    glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view_matrix));
+    glUniformMatrix4fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj_matrix));
+
+    glBindVertexArray(tetraVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 12);
 
     glUniform3fv(glGetUniformLocation(shader_program, "light.position"), 1, glm::value_ptr(light_pos));
     glUniform3fv(glGetUniformLocation(shader_program, "light.ambient"), 1, glm::value_ptr(light_ambient));
@@ -274,7 +332,6 @@ void render(double currentTime) {
     glUniform3fv(glGetUniformLocation(shader_program, "view_pos"), 1, glm::value_ptr(camera_pos));
 
 
-    glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 
 void processInput(GLFWwindow *window) {
