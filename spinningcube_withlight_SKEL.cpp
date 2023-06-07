@@ -350,9 +350,12 @@ void render(double currentTime) {
     glUniform3fv(glGetUniformLocation(shader_program, "light.position"), 1, glm::value_ptr(light_pos));
     glUniform3fv(glGetUniformLocation(shader_program, "light.ambient"), 1, glm::value_ptr(light_ambient));
     glUniform3fv(glGetUniformLocation(shader_program, "light.diffuse"), 1, glm::value_ptr(light_diffuse));
+    glUniform3fv(glGetUniformLocation(shader_program, "light.specular"), 1, glm::value_ptr(light_specular));
 
     glUniform3fv(glGetUniformLocation(shader_program, "material.ambient"), 1, glm::value_ptr(material_ambient));
     glUniform3fv(glGetUniformLocation(shader_program, "material.diffuse"), 1, glm::value_ptr(material_diffuse));
+    glUniform3fv(glGetUniformLocation(shader_program, "material.specular"), 1, glm::value_ptr(material_specular));
+    glUniform1f(glGetUniformLocation(shader_program, "material.shininess"), material_shininess);
 
     // Moving cube
     // model_matrix = glm::rotate(model_matrix,
@@ -365,6 +368,10 @@ void render(double currentTime) {
     // Normal matrix: normal vectors to world coordinates
     glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_matrix)));
     glUniformMatrix3fv(normal_matrix_location, 1, GL_FALSE, glm::value_ptr(normal_matrix));
+
+    // Added view position to specular calculation
+    glUniform3fv(glGetUniformLocation(shader_program, "view_pos"), 1, glm::value_ptr(camera_pos));
+
 
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
