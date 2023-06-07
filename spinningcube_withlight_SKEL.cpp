@@ -13,6 +13,8 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "textfile/textfile_ALT.h"
+#include "shapes/cube.h"
+#include "shapes/tetrahedron.h"
 
 int gl_width = 640;
 int gl_height = 480;
@@ -154,61 +156,17 @@ int main() {
     // far ---> 1        2
     //       6        5
     //
-    const GLfloat vertex_positions[] = {
-            -0.25f, -0.25f, -0.25f, // 1
-            -0.25f,  0.25f, -0.25f, // 0
-            0.25f, -0.25f, -0.25f, // 2
 
-            0.25f,  0.25f, -0.25f, // 3
-            0.25f, -0.25f, -0.25f, // 2
-            -0.25f,  0.25f, -0.25f, // 0
-
-            0.25f, -0.25f, -0.25f, // 2
-            0.25f,  0.25f, -0.25f, // 3
-            0.25f, -0.25f,  0.25f, // 5
-
-            0.25f,  0.25f,  0.25f, // 4
-            0.25f, -0.25f,  0.25f, // 5
-            0.25f,  0.25f, -0.25f, // 3
-
-            0.25f, -0.25f,  0.25f, // 5
-            0.25f,  0.25f,  0.25f, // 4
-            -0.25f, -0.25f,  0.25f, // 6
-
-            -0.25f,  0.25f,  0.25f, // 7
-            -0.25f, -0.25f,  0.25f, // 6
-            0.25f,  0.25f,  0.25f, // 4
-
-            -0.25f, -0.25f,  0.25f, // 6
-            -0.25f,  0.25f,  0.25f, // 7
-            -0.25f, -0.25f, -0.25f, // 1
-
-            -0.25f,  0.25f, -0.25f, // 0
-            -0.25f, -0.25f, -0.25f, // 1
-            -0.25f,  0.25f,  0.25f, // 7
-
-            0.25f, -0.25f, -0.25f, // 2
-            0.25f, -0.25f,  0.25f, // 5
-            -0.25f, -0.25f, -0.25f, // 1
-
-            -0.25f, -0.25f,  0.25f, // 6
-            -0.25f, -0.25f, -0.25f, // 1
-            0.25f, -0.25f,  0.25f, // 5
-
-            0.25f,  0.25f,  0.25f, // 4
-            0.25f,  0.25f, -0.25f, // 3
-            -0.25f,  0.25f,  0.25f, // 7
-
-            -0.25f,  0.25f, -0.25f, // 0
-            -0.25f,  0.25f,  0.25f, // 7
-            0.25f,  0.25f, -0.25f  // 3
-    };
+    Cube cubeInstance;
+    GLfloat* cube_vertex_positions_pointer = cubeInstance.getVertices();
+    GLfloat cube_vertex_positions[108];
+    std::copy(cube_vertex_positions_pointer, cube_vertex_positions_pointer + 108, cube_vertex_positions);
 
 // Vertex Buffer Object (for vertex coordinates)
     GLuint vbo = 0;
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_positions), vertex_positions, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertex_positions), cube_vertex_positions, GL_STATIC_DRAW);
 
     // Vertex attributes
     // 0: vertex position (x, y, z)
@@ -216,72 +174,15 @@ int main() {
     glEnableVertexAttribArray(0);
 
     // 1: vertex normals (x, y, z)
-
-    // Cube to be rendered
-    //
-    //          0        3
-    //       7        4 <-- top-right-near
-    // bottom
-    // left
-    // far ---> 1        2
-    //       6        5
-    //
-    // Vertex normals
-    const GLfloat vertex_normals[]= {
-            0.0f,  0.0f, -1.0f, // 1
-            0.0f,  0.0f, -1.0f, // 0
-            0.0f,  0.0f, -1.0f, // 2
-
-            0.0f,  0.0f, -1.0f, // 3
-            0.0f,  0.0f, -1.0f, // 2
-            0.0f,  0.0f, -1.0f, // 0
-
-            1.0f,  0.0f,  0.0f, // 2
-            1.0f,  0.0f,  0.0f, // 3
-            1.0f,  0.0f,  0.0f, // 5
-
-            1.0f,  0.0f,  0.0f, // 4
-            1.0f,  0.0f,  0.0f, // 5
-            1.0f,  0.0f,  0.0f, // 3
-
-            0.0f,  0.0f,  1.0f, // 5
-            0.0f,  0.0f,  1.0f, // 4
-            0.0f,  0.0f,  1.0f, // 6
-
-            0.0f,  0.0f,  1.0f, // 7
-            0.0f,  0.0f,  1.0f, // 6
-            0.0f,  0.0f,  1.0f, // 4
-
-            -1.0f,  0.0f,  0.0f, // 6
-            -1.0f,  0.0f,  0.0f, // 7
-            -1.0f,  0.0f,  0.0f, // 1
-
-            -1.0f,  0.0f,  0.0f, // 0
-            -1.0f,  0.0f,  0.0f, // 1
-            -1.0f,  0.0f,  0.0f, // 7
-
-            0.0f, -1.0f,  0.0f, // 2
-            0.0f, -1.0f,  0.0f, // 5
-            0.0f, -1.0f,  0.0f, // 1
-
-            0.0f, -1.0f,  0.0f, // 6
-            0.0f, -1.0f,  0.0f, // 1
-            0.0f, -1.0f,  0.0f, // 5
-
-            0.0f,  1.0f,  0.0f, // 4
-            0.0f,  1.0f,  0.0f, // 3
-            0.0f,  1.0f,  0.0f, // 7
-
-            0.0f,  1.0f,  0.0f, // 0
-            0.0f,  1.0f,  0.0f, // 7
-            0.0f,  1.0f,  0.0f  // 3
-    };
+    GLfloat* cube_vertex_normals_pointer = cubeInstance.getNormals();
+    GLfloat cube_vertex_normals[108];
+    std::copy(cube_vertex_normals_pointer, cube_vertex_normals_pointer + 108, cube_vertex_normals);
 
     // Vertex Buffer Object (for vertex normals)
     GLuint vbo_normals = 0;
     glGenBuffers(1, &vbo_normals);
     glBindBuffer(GL_ARRAY_BUFFER, vbo_normals);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_normals), vertex_normals, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertex_normals), cube_vertex_normals, GL_STATIC_DRAW);
 
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(1);
