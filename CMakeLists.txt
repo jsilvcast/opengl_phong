@@ -22,5 +22,5 @@ add_library(${library_name} ${SOURCE_FILES} ${HEADER_FILES})
 target_include_directories(${library_name} PUBLIC "$<BUILD_INTERFACE:${PROJECT_SRC_DIR}>")
 target_link_libraries(${library_name} PUBLIC ${LIBS})
 
-add_executable(spinningcube_withlight_SKEL spinningcube_withlight_SKEL.cpp)
-target_link_libraries (spinningcube_withlight_SKEL ${library_name})
+add_executable(phong spinningcube_withlight_SKEL.cpp)
+target_link_libraries (phong ${library_name})
