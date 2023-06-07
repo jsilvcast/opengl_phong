@@ -36,7 +36,7 @@ glm::vec3 camera_front(0.0f, 0.0f, -1.0f);
 glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
 
 // Lighting
-glm::vec3 light_pos(1.2f, 1.0f, 2.0f);
+glm::vec3 light_pos(-1.0f, 0.0f, 0.0f);
 glm::vec3 light_ambient(0.2f, 0.2f, 0.2f);
 glm::vec3 light_diffuse(0.5f, 0.5f, 0.5f);
 glm::vec3 light_specular(1.0f, 1.0f, 1.0f);
@@ -217,6 +217,75 @@ int main() {
 
     // 1: vertex normals (x, y, z)
 
+    // Cube to be rendered
+    //
+    //          0        3
+    //       7        4 <-- top-right-near
+    // bottom
+    // left
+    // far ---> 1        2
+    //       6        5
+    //
+    // Vertex normals
+    const GLfloat vertex_normals[]= {
+            0.0f,  0.0f, -1.0f, // 1
+            0.0f,  0.0f, -1.0f, // 0
+            0.0f,  0.0f, -1.0f, // 2
+
+            0.0f,  0.0f, -1.0f, // 3
+            0.0f,  0.0f, -1.0f, // 2
+            0.0f,  0.0f, -1.0f, // 0
+
+            1.0f,  0.0f,  0.0f, // 2
+            1.0f,  0.0f,  0.0f, // 3
+            1.0f,  0.0f,  0.0f, // 5
+
+            1.0f,  0.0f,  0.0f, // 4
+            1.0f,  0.0f,  0.0f, // 5
+            1.0f,  0.0f,  0.0f, // 3
+
+            0.0f,  0.0f,  1.0f, // 5
+            0.0f,  0.0f,  1.0f, // 4
+            0.0f,  0.0f,  1.0f, // 6
+
+            0.0f,  0.0f,  1.0f, // 7
+            0.0f,  0.0f,  1.0f, // 6
+            0.0f,  0.0f,  1.0f, // 4
+
+            -1.0f,  0.0f,  0.0f, // 6
+            -1.0f,  0.0f,  0.0f, // 7
+            -1.0f,  0.0f,  0.0f, // 1
+
+            -1.0f,  0.0f,  0.0f, // 0
+            -1.0f,  0.0f,  0.0f, // 1
+            -1.0f,  0.0f,  0.0f, // 7
+
+            0.0f, -1.0f,  0.0f, // 2
+            0.0f, -1.0f,  0.0f, // 5
+            0.0f, -1.0f,  0.0f, // 1
+
+            0.0f, -1.0f,  0.0f, // 6
+            0.0f, -1.0f,  0.0f, // 1
+            0.0f, -1.0f,  0.0f, // 5
+
+            0.0f,  1.0f,  0.0f, // 4
+            0.0f,  1.0f,  0.0f, // 3
+            0.0f,  1.0f,  0.0f, // 7
+
+            0.0f,  1.0f,  0.0f, // 0
+            0.0f,  1.0f,  0.0f, // 7
+            0.0f,  1.0f,  0.0f  // 3
+    };
+
+    // Vertex Buffer Object (for vertex normals)
+    GLuint vbo_normals = 0;
+    glGenBuffers(1, &vbo_normals);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_normals);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_normals), vertex_normals, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(1);
+
     // Unbind vbo (it was conveniently registered by VertexAttribPointer)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -278,8 +347,12 @@ void render(double currentTime) {
     glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view_matrix));
     glUniformMatrix4fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj_matrix));
 
+    glUniform3fv(glGetUniformLocation(shader_program, "light.position"), 1, glm::value_ptr(light_pos));
     glUniform3fv(glGetUniformLocation(shader_program, "light.ambient"), 1, glm::value_ptr(light_ambient));
+    glUniform3fv(glGetUniformLocation(shader_program, "light.diffuse"), 1, glm::value_ptr(light_diffuse));
+
     glUniform3fv(glGetUniformLocation(shader_program, "material.ambient"), 1, glm::value_ptr(material_ambient));
+    glUniform3fv(glGetUniformLocation(shader_program, "material.diffuse"), 1, glm::value_ptr(material_diffuse));
 
     // Moving cube
     // model_matrix = glm::rotate(model_matrix,
