@@ -27,12 +27,12 @@ uniform vec3 view_pos;
 
 void main() {
   // Ambient
-//    vec3 ambient = light.ambient * material.ambient;
+  vec3 ambient = light.ambient * material.ambient;
 
   // Diffuse
 
   // Specular
 
-  vec3 result = vs_color;
+  vec3 result = vs_color * ambient;
   frag_col = vec4(result, 1.0);
 }

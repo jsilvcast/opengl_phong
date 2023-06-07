@@ -267,12 +267,19 @@ void render(double currentTime) {
     glm::mat4 model_matrix, view_matrix, proj_matrix;
 
     model_matrix = glm::mat4(1.f);
+    model_matrix = glm::rotate(model_matrix, f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    model_matrix = glm::rotate(model_matrix, f * glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+
     view_matrix = glm::lookAt(camera_pos, camera_pos + camera_front, camera_up);
     proj_matrix = glm::perspective(glm::radians(50.0f), (float)gl_width / (float)gl_height, 0.1f, 100.0f);
 
     glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model_matrix));
     glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view_matrix));
     glUniformMatrix4fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj_matrix));
+
+    glUniform3fv(glGetUniformLocation(shader_program, "light.ambient"), 1, glm::value_ptr(light_ambient));
+    glUniform3fv(glGetUniformLocation(shader_program, "material.ambient"), 1, glm::value_ptr(material_ambient));
 
     // Moving cube
     // model_matrix = glm::rotate(model_matrix,
