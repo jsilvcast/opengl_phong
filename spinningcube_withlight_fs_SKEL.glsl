@@ -22,11 +22,12 @@ in vec2 vs_tex_coord;
 in vec3 vs_color;
 
 uniform Material material;
-uniform Light light;
+#define NR_POINT_LIGHTS 4
+uniform Light lights[NR_POINT_LIGHTS];
 uniform vec3 view_pos;
 
-void main() {
-  // Ambient
+vec3 CalcPointLight(Light light, vec3 vs_normal, vec3 frag_3Dpos, vec3 view_pos)
+{
   vec3 ambient = light.ambient * material.ambient;
 
   // Diffuse
@@ -40,5 +41,16 @@ void main() {
   vec3 specular = light.specular * (spec * material.specular);
 
   vec3 result = vs_color * (diffuse + ambient + specular);
-  frag_col = vec4(result, 1.0);
+  return result;
 }
+
+void main() {
+
+    vec3 result = vec3(0.0);
+    for (int i = 0; i < NR_POINT_LIGHTS; i++) {
+        result += CalcPointLight(lights[i], vs_normal, frag_3Dpos, view_pos);
+    }
+    frag_col = vec4(result, 1.0);
+}
+
+

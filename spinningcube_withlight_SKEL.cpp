@@ -41,7 +41,7 @@ glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
 
 // Lighting
 glm::vec3 light_pos(0.0f, 0.0f, 0.0f);
-glm::vec3 light_pos_2(0.0f, 0.0f, 0.0f);
+glm::vec3 light_pos_2(-1.0f, 0.0f, 0.0f);
 glm::vec3 light_ambient(0.2f, 0.2f, 0.2f);
 glm::vec3 light_diffuse(0.5f, 0.5f, 0.5f);
 glm::vec3 light_specular(1.0f, 1.0f, 1.0f);
@@ -306,10 +306,15 @@ void render(double currentTime) {
     glBindVertexArray(tetraVAO);
     glDrawArrays(GL_TRIANGLES, 0, 12);
 
-    glUniform3fv(glGetUniformLocation(shader_program, "light.position"), 1, glm::value_ptr(light_pos));
-    glUniform3fv(glGetUniformLocation(shader_program, "light.ambient"), 1, glm::value_ptr(light_ambient));
-    glUniform3fv(glGetUniformLocation(shader_program, "light.diffuse"), 1, glm::value_ptr(light_diffuse));
-    glUniform3fv(glGetUniformLocation(shader_program, "light.specular"), 1, glm::value_ptr(light_specular));
+    glUniform3fv(glGetUniformLocation(shader_program, "lights[0].position"), 1, glm::value_ptr(light_pos));
+    glUniform3fv(glGetUniformLocation(shader_program, "lights[0].ambient"), 1, glm::value_ptr(light_ambient));
+    glUniform3fv(glGetUniformLocation(shader_program, "lights[0].diffuse"), 1, glm::value_ptr(light_diffuse));
+    glUniform3fv(glGetUniformLocation(shader_program, "lights[0].specular"), 1, glm::value_ptr(light_specular));
+
+    glUniform3fv(glGetUniformLocation(shader_program, "lights[1].position"), 1, glm::value_ptr(light_pos_2));
+    glUniform3fv(glGetUniformLocation(shader_program, "lights[1].ambient"), 1, glm::value_ptr(light_ambient));
+    glUniform3fv(glGetUniformLocation(shader_program, "lights[1].diffuse"), 1, glm::value_ptr(light_diffuse));
+    glUniform3fv(glGetUniformLocation(shader_program, "lights[1].specular"), 1, glm::value_ptr(light_specular));
 
     glUniform3fv(glGetUniformLocation(shader_program, "material.ambient"), 1, glm::value_ptr(material_ambient));
     glUniform3fv(glGetUniformLocation(shader_program, "material.diffuse"), 1, glm::value_ptr(material_diffuse));
