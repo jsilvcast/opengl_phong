@@ -12,7 +12,7 @@
 #include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::perspective
 #include <glm/gtc/type_ptr.hpp>
 
-#include "textfile_ALT.h"
+#include "textfile/textfile_ALT.h"
 
 int gl_width = 640;
 int gl_height = 480;

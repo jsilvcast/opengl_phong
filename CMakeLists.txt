@@ -1,17 +1,26 @@
-cmake_minimum_required (VERSION 2.8.11)
+cmake_minimum_required (VERSION 3.16)
 project (gl_test)
+set(library_name lib)
+set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin) #set binary dir to bin folder
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 find_package(GLEW REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 
-add_executable(gltest test.c)
-add_executable(hellotriangle hellotriangle.c)
-add_executable(spinningcube_withlight spinningcube_withlight.cpp textfile.c)
 
-target_include_directories(gltest PUBLIC $GLEW_INCLUDE_DIR)
-target_include_directories(hellotriangle PUBLIC $GLEW_INCLUDE_DIR)
-target_include_directories(spinningcube_withlight PUBLIC $GLEW_INCLUDE_DIR)
+set(LIBS
+        ${LIBS}
+        GLEW::GLEW
+        glfw
+        GL
+        )
 
-target_link_libraries (gltest PRIVATE GLEW::GLEW glfw GL)
-target_link_libraries (hellotriangle PRIVATE GLEW::GLEW glfw GL)
-target_link_libraries (spinningcube_withlight PRIVATE GLEW::GLEW glfw GL)
+set(HEADER_FILES ${HEADER_FILES} textfile/textfile.h textfile/textfile_ALT.h)
+set(SOURCE_FILES ${SOURCE_FILES} textfile/textfile.c)
+
+add_library(${library_name} ${SOURCE_FILES} ${HEADER_FILES})
+target_include_directories(${library_name} PUBLIC "$<BUILD_INTERFACE:${PROJECT_SRC_DIR}>")
+target_link_libraries(${library_name} PUBLIC ${LIBS})
+
+add_executable(spinningcube_withlight_SKEL spinningcube_withlight_SKEL.cpp)
+target_link_libraries (spinningcube_withlight_SKEL ${library_name})
