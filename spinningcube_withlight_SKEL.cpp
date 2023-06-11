@@ -11,10 +11,14 @@
 #include <glm/mat4x4.hpp> // glm::mat4
 #include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::perspective
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
 
 #include "textfile/textfile_ALT.h"
 #include "shapes/cube.h"
 #include "shapes/tetrahedron.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 int gl_width = 640;
 int gl_height = 480;
@@ -22,6 +26,8 @@ int gl_height = 480;
 void glfw_window_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
 void render(double);
+unsigned int loadTexture(char const * path);
+
 
 GLuint shader_program = 0; // shader program to set render pipeline
 GLuint vao = 0; // Vertext Array Object to set input data
@@ -40,17 +46,19 @@ glm::vec3 camera_front(0.0f, 0.0f, -1.0f);
 glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
 
 // Lighting
-glm::vec3 light_pos(0.0f, 0.0f, 0.0f);
-glm::vec3 light_pos_2(-1.0f, 0.0f, 0.0f);
+glm::vec3 light_pos(-1.0f, 0.0f, 1.0f);
+glm::vec3 light_pos_2(1.f, 1.0f, 0.0f);
 glm::vec3 light_ambient(0.2f, 0.2f, 0.2f);
 glm::vec3 light_diffuse(0.5f, 0.5f, 0.5f);
 glm::vec3 light_specular(1.0f, 1.0f, 1.0f);
 
 // Material
 glm::vec3 material_ambient(1.0f, 0.5f, 0.31f);
-glm::vec3 material_diffuse(1.0f, 0.5f, 0.31f);
+//glm::vec3 material_diffuse(1.0f, 0.5f, 0.31f);
 glm::vec3 material_specular(0.5f, 0.5f, 0.5f);
 const GLfloat material_shininess = 32.0f;
+
+unsigned int diffuseMap;
 
 int main() {
     // start GL context and O/S window using the GLFW helper library
@@ -58,6 +66,11 @@ int main() {
         fprintf(stderr, "ERROR: could not start GLFW3\n");
         return 1;
     }
+    int width, height, nrChannels;
+    // Before loading the image, we flip it vertically because
+    // Images: 0.0 top of y-axis  OpenGL: 0.0 bottom of y-axis
+    stbi_set_flip_vertically_on_load(1);
+    unsigned char *data = stbi_load("texture.jpg", &width, &height, &nrChannels, 0);
 
     //  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     //  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -190,6 +203,21 @@ int main() {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(1);
 
+    // 2: texture coordinates (u, v)
+    GLfloat* cube_vertex_texture_coordinates_pointer = cubeInstance.getUV();
+    GLfloat cube_vertex_texture_coordinates[72];
+    std::copy(cube_vertex_texture_coordinates_pointer, cube_vertex_texture_coordinates_pointer + 72, cube_vertex_texture_coordinates);
+
+    // Vertex Buffer Object (for vertex texture coordinates)
+    GLuint vbo_texture_coordinates = 0;
+    glGenBuffers(1, &vbo_texture_coordinates);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_texture_coordinates);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertex_texture_coordinates), cube_vertex_texture_coordinates, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(2);
+
+
 //    // Unbind vbo (it was conveniently registered by VertexAttribPointer)
 //    glBindBuffer(GL_ARRAY_BUFFER, 0);
 //
@@ -235,6 +263,8 @@ int main() {
 //    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glEnableVertexAttribArray(0);
 
+    std::string path = "../etc/texture.jpg";
+    diffuseMap = loadTexture(path.c_str());
     // Uniforms
     // - Model matrix
     model_location = glGetUniformLocation(shader_program, "model");
@@ -248,6 +278,7 @@ int main() {
     // - Light data
     // - Material data
     // [...]
+
 
 // Render loop
     while(!glfwWindowShouldClose(window)) {
@@ -317,9 +348,13 @@ void render(double currentTime) {
     glUniform3fv(glGetUniformLocation(shader_program, "lights[1].specular"), 1, glm::value_ptr(light_specular));
 
     glUniform3fv(glGetUniformLocation(shader_program, "material.ambient"), 1, glm::value_ptr(material_ambient));
-    glUniform3fv(glGetUniformLocation(shader_program, "material.diffuse"), 1, glm::value_ptr(material_diffuse));
+    glUniform1i(glGetUniformLocation(shader_program, "material.diffuse"), 0);
     glUniform3fv(glGetUniformLocation(shader_program, "material.specular"), 1, glm::value_ptr(material_specular));
     glUniform1f(glGetUniformLocation(shader_program, "material.shininess"), material_shininess);
+
+//    bind diffuse texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, diffuseMap);
 
     // Moving cube
     // model_matrix = glm::rotate(model_matrix,
@@ -349,4 +384,42 @@ void glfw_window_size_callback(GLFWwindow* window, int width, int height) {
     gl_width = width;
     gl_height = height;
     printf("New viewport: (width: %d, height: %d)\n", width, height);
+}
+
+// utility function for loading a 2D texture from file
+// ---------------------------------------------------
+unsigned int loadTexture(char const * path){
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
 }
