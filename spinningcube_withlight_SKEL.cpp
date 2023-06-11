@@ -58,7 +58,7 @@ glm::vec3 material_diffuse(1.0f, 0.5f, 0.31f);
 glm::vec3 material_specular(0.5f, 0.5f, 0.5f);
 const GLfloat material_shininess = 32.0f;
 
-unsigned int diffuseMap, diffuseMap2;
+unsigned int diffuseMapCube, diffuseMapTetr, specularMapCube, specularMapTetr;
 
 int main() {
     // start GL context and O/S window using the GLFW helper library
@@ -277,10 +277,14 @@ int main() {
 //    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glEnableVertexAttribArray(0);
 
-    std::string path = "../etc/texture.jpg";
-    std::string path_2 = "../etc/watchmen_smiley.png";
-    diffuseMap = loadTexture(path.c_str());
-    diffuseMap2 = loadTexture(path_2.c_str());
+    std::string cubeDiffPath = "../etc/m2base.jpg";
+    std::string cubeMetalPath = "../etc/m2metall.jpg";
+    std::string tetrDiffPath = "../etc/mdbase.jpg";
+    std::string tetrMetalPath = "../etc/mdmetall.jpg";
+    diffuseMapCube = loadTexture(cubeDiffPath.c_str());
+    specularMapCube = loadTexture(cubeMetalPath.c_str());
+    diffuseMapTetr = loadTexture(tetrDiffPath.c_str());
+    specularMapTetr = loadTexture(tetrMetalPath.c_str());
     // Uniforms
     // - Model matrix
     model_location = glGetUniformLocation(shader_program, "model");
@@ -329,7 +333,7 @@ void render(double currentTime) {
     model_matrix = glm::mat4(1.0f);
     model_matrix = glm::translate(model_matrix, glm::vec3(-0.5f, 0.0f, 0.0f));
     model_matrix = glm::rotate(model_matrix, f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    model_matrix = glm::rotate(model_matrix, f * glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+//    model_matrix = glm::rotate(model_matrix, f * glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
     view_matrix = glm::lookAt(camera_pos, camera_pos + camera_front, camera_up);
     proj_matrix = glm::perspective(glm::radians(50.0f), (float)gl_width / (float)gl_height, 0.1f, 100.0f);
@@ -341,9 +345,12 @@ void render(double currentTime) {
     glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_matrix)));
     glUniformMatrix3fv(normal_matrix_location, 1, GL_FALSE, glm::value_ptr(normal_matrix));
 
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, diffuseMapCube);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, specularMapCube);
 
     glBindVertexArray(vao);
-    glBindTexture(GL_TEXTURE_2D, diffuseMap);
     glDrawArrays(GL_TRIANGLES, 0, 108);
 //    glActiveTexture(GL_TEXTURE1);
 
@@ -363,11 +370,13 @@ void render(double currentTime) {
     glm::mat3 normal_matrix_2 = glm::transpose(glm::inverse(glm::mat3(model_matrix_2)));
     glUniformMatrix3fv(normal_matrix_location, 1, GL_FALSE, glm::value_ptr(normal_matrix_2));
 
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, diffuseMapTetr);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, specularMapTetr);
 
     glBindVertexArray(tetraVAO);
-    glBindTexture(GL_TEXTURE_2D, diffuseMap2);
     glDrawArrays(GL_TRIANGLES, 0, 12);
-//    glActiveTexture(GL_TEXTURE1);
 
     glUniform3fv(glGetUniformLocation(shader_program, "lights[0].position"), 1, glm::value_ptr(light_pos));
     glUniform3fv(glGetUniformLocation(shader_program, "lights[0].ambient"), 1, glm::value_ptr(light_ambient));
@@ -381,17 +390,8 @@ void render(double currentTime) {
 
     glUniform3fv(glGetUniformLocation(shader_program, "material.ambient"), 1, glm::value_ptr(material_ambient));
     glUniform1i(glGetUniformLocation(shader_program, "material.diffuse"), 0);
-//    glUniform3fv(glGetUniformLocation(shader_program, "material.diffuse"), 1, glm::value_ptr(material_diffuse));
-    glUniform3fv(glGetUniformLocation(shader_program, "material.specular"), 1, glm::value_ptr(material_specular));
+    glUniform1i(glGetUniformLocation(shader_program, "material.specular"), 0);
     glUniform1f(glGetUniformLocation(shader_program, "material.shininess"), material_shininess);
-
-//    bind diffuse texture to vao
-//    glActiveTexture(GL_TEXTURE0);
-//    glBindTexture(GL_TEXTURE_2D, diffuseMap);
-//    glActiveTexture(GL_TEXTURE1);
-//    glBindTexture(GL_TEXTURE_2D, diffuseMap2);
-//
-
 
     // Moving cube
     // model_matrix = glm::rotate(model_matrix,

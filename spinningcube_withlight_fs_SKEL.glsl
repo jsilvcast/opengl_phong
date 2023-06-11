@@ -3,7 +3,7 @@
 struct Material {
     vec3 ambient;
     sampler2D diffuse;
-    vec3 specular;
+    sampler2D specular;
     float shininess;
 };
 
@@ -40,7 +40,7 @@ vec3 CalcPointLight(Light light, vec3 vs_normal, vec3 frag_3Dpos, vec3 view_pos)
     vec3 view_dir = normalize(view_pos - frag_3Dpos);
     vec3 reflect_dir = reflect(-light_dir, vs_normal);
     float spec = pow(max(dot(view_dir, reflect_dir), 0.0), material.shininess);
-    vec3 specular = light.specular * (spec * material.specular);
+    vec3 specular = light.specular * spec * vec3(texture(material.specular, vs_tex_coord));
 
     vec3 result = vs_color * (diffuse + ambient + specular);
     return result;
