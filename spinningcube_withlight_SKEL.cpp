@@ -46,19 +46,19 @@ glm::vec3 camera_front(0.0f, 0.0f, -1.0f);
 glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
 
 // Lighting
-glm::vec3 light_pos(-1.0f, 0.0f, 1.0f);
-glm::vec3 light_pos_2(1.f, 1.0f, 0.0f);
+glm::vec3 light_pos(-1.0f, 0.0f, 0.0f);
+glm::vec3 light_pos_2(1.f, 0.0f, 1.0f);
 glm::vec3 light_ambient(0.2f, 0.2f, 0.2f);
 glm::vec3 light_diffuse(0.5f, 0.5f, 0.5f);
 glm::vec3 light_specular(1.0f, 1.0f, 1.0f);
 
 // Material
 glm::vec3 material_ambient(1.0f, 0.5f, 0.31f);
-//glm::vec3 material_diffuse(1.0f, 0.5f, 0.31f);
+glm::vec3 material_diffuse(1.0f, 0.5f, 0.31f);
 glm::vec3 material_specular(0.5f, 0.5f, 0.5f);
 const GLfloat material_shininess = 32.0f;
 
-unsigned int diffuseMap;
+unsigned int diffuseMap, diffuseMap2;
 
 int main() {
     // start GL context and O/S window using the GLFW helper library
@@ -259,12 +259,28 @@ int main() {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glEnableVertexAttribArray(1);
 
+    // 2: texture coordinates (u, v)
+    GLfloat* tetrahedron_vertex_texture_coordinates_pointer = tetrahedronInstance.getUVs();
+    GLfloat tetrahedron_vertex_texture_coordinates[24];
+    std::copy(tetrahedron_vertex_texture_coordinates_pointer, tetrahedron_vertex_texture_coordinates_pointer + 24, tetrahedron_vertex_texture_coordinates);
+
+    // Vertex Buffer Object (for vertex texture coordinates)
+    GLuint vbo_texture_coordinates_tetrahedron = 0;
+    glGenBuffers(1, &vbo_texture_coordinates_tetrahedron);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo_texture_coordinates_tetrahedron);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(tetrahedron_vertex_texture_coordinates), tetrahedron_vertex_texture_coordinates, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+    glEnableVertexAttribArray(2);
+
 //    // Unbind vbo (it was conveniently registered by VertexAttribPointer)
 //    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glEnableVertexAttribArray(0);
 
     std::string path = "../etc/texture.jpg";
+    std::string path_2 = "../etc/watchmen_smiley.png";
     diffuseMap = loadTexture(path.c_str());
+    diffuseMap2 = loadTexture(path_2.c_str());
     // Uniforms
     // - Model matrix
     model_location = glGetUniformLocation(shader_program, "model");
@@ -307,6 +323,7 @@ void render(double currentTime) {
     glUseProgram(shader_program);
 
     glm::mat4 model_matrix, view_matrix, proj_matrix;
+    glm::mat4 model_matrix_2, view_matrix_2, proj_matrix_2;
 
     // Cube
     model_matrix = glm::mat4(1.0f);
@@ -321,21 +338,36 @@ void render(double currentTime) {
     glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view_matrix));
     glUniformMatrix4fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj_matrix));
 
+    glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_matrix)));
+    glUniformMatrix3fv(normal_matrix_location, 1, GL_FALSE, glm::value_ptr(normal_matrix));
+
+
     glBindVertexArray(vao);
+    glBindTexture(GL_TEXTURE_2D, diffuseMap);
     glDrawArrays(GL_TRIANGLES, 0, 108);
+//    glActiveTexture(GL_TEXTURE1);
 
     // Tetrahedron
-    model_matrix = glm::mat4(1.0f);
-    model_matrix = glm::translate(model_matrix, glm::vec3(0.5f, 0.0f, 0.0f));
-    model_matrix = glm::rotate(model_matrix, f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    model_matrix = glm::rotate(model_matrix, f * glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    model_matrix_2 = glm::mat4(1.0f);
+    model_matrix_2 = glm::translate(model_matrix_2, glm::vec3(1.0f, 0.0f, 0.0f));
+    model_matrix_2 = glm::rotate(model_matrix_2, f * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    model_matrix_2 = glm::rotate(model_matrix_2, f * glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-    glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model_matrix));
-    glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view_matrix));
-    glUniformMatrix4fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj_matrix));
+    view_matrix_2 = glm::lookAt(camera_pos, camera_pos + camera_front, camera_up);
+    proj_matrix_2 = glm::perspective(glm::radians(50.0f), (float)gl_width / (float)gl_height, 0.1f, 100.0f);
+
+    glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model_matrix_2));
+    glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view_matrix_2));
+    glUniformMatrix4fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj_matrix_2));
+
+    glm::mat3 normal_matrix_2 = glm::transpose(glm::inverse(glm::mat3(model_matrix_2)));
+    glUniformMatrix3fv(normal_matrix_location, 1, GL_FALSE, glm::value_ptr(normal_matrix_2));
+
 
     glBindVertexArray(tetraVAO);
+    glBindTexture(GL_TEXTURE_2D, diffuseMap2);
     glDrawArrays(GL_TRIANGLES, 0, 12);
+//    glActiveTexture(GL_TEXTURE1);
 
     glUniform3fv(glGetUniformLocation(shader_program, "lights[0].position"), 1, glm::value_ptr(light_pos));
     glUniform3fv(glGetUniformLocation(shader_program, "lights[0].ambient"), 1, glm::value_ptr(light_ambient));
@@ -349,12 +381,17 @@ void render(double currentTime) {
 
     glUniform3fv(glGetUniformLocation(shader_program, "material.ambient"), 1, glm::value_ptr(material_ambient));
     glUniform1i(glGetUniformLocation(shader_program, "material.diffuse"), 0);
+//    glUniform3fv(glGetUniformLocation(shader_program, "material.diffuse"), 1, glm::value_ptr(material_diffuse));
     glUniform3fv(glGetUniformLocation(shader_program, "material.specular"), 1, glm::value_ptr(material_specular));
     glUniform1f(glGetUniformLocation(shader_program, "material.shininess"), material_shininess);
 
-//    bind diffuse texture
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, diffuseMap);
+//    bind diffuse texture to vao
+//    glActiveTexture(GL_TEXTURE0);
+//    glBindTexture(GL_TEXTURE_2D, diffuseMap);
+//    glActiveTexture(GL_TEXTURE1);
+//    glBindTexture(GL_TEXTURE_2D, diffuseMap2);
+//
+
 
     // Moving cube
     // model_matrix = glm::rotate(model_matrix,
@@ -365,12 +402,10 @@ void render(double currentTime) {
     //   [...]
     //
     // Normal matrix: normal vectors to world coordinates
-    glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_matrix)));
-    glUniformMatrix3fv(normal_matrix_location, 1, GL_FALSE, glm::value_ptr(normal_matrix));
+
 
     // Added view position to specular calculation
     glUniform3fv(glGetUniformLocation(shader_program, "view_pos"), 1, glm::value_ptr(camera_pos));
-
 
 }
 

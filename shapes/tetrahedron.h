@@ -53,8 +53,24 @@ private:
             1.f, -1.f,  -1.f, // 3
             1.f, -1.f,  -1.f, // 1
             1.f, -1.f,  -1.f, // 5
+    };
 
+    GLfloat uv_texture[24] = {
+            0.f, 0.f, // 1
+            0.f, 1.f, // 7
+            1.f, 0.f, // 5
 
+            0.f, 1.f, // 7
+            1.f, 0.f, // 5
+            1.f, 1.f, // 3
+
+            0.f, 1.f, // 7
+            1.f, 1.f, // 3
+            0.f, 0.f, // 1
+
+            1.f, 1.f, // 3
+            0.f, 0.f, // 1
+            1.f, 0.f, // 5
     };
 
 public:
@@ -65,6 +81,10 @@ public:
 
     GLfloat* getNormals() {
         return vertex_normal;
+    }
+
+    GLfloat* getUVs() {
+        return uv_texture;
     }
 };
 

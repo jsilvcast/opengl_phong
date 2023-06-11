@@ -22,7 +22,7 @@ in vec2 vs_tex_coord;
 in vec3 vs_color;
 
 uniform Material material;
-#define NR_POINT_LIGHTS 4
+#define NR_POINT_LIGHTS 2
 uniform Light lights[NR_POINT_LIGHTS];
 uniform vec3 view_pos;
 
